@@ -1,0 +1,89 @@
+blueprint:
+  name: "Sync External Temperature to TRV"
+  description: "Updates TRV external temperature input with a selected temperature sensor value while handling availability changes."
+  domain: automation
+  input:
+    temp_sensor:
+      name: Temperature Sensor
+      description: "The external temperature sensor to use."
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+
+    trv_temp_input:
+      name: TRV External Temperature Input
+      description: "The number entity for TRV external temperature input."
+      selector:
+        entity:
+          domain: number
+
+    trv_temp_select:
+      name: TRV Temperature Sensor Selector
+      description: "The select entity to switch between internal and external temperature."
+      selector:
+        entity:
+          domain: select
+
+    update_delay:
+      name: Update Delay
+      description: "Time delay between updates to avoid excessive updates."
+      default: 120
+      selector:
+        number:
+          min: 10
+          max: 600
+          unit_of_measurement: seconds
+          mode: slider
+
+mode: restart
+trigger:
+  - platform: state
+    entity_id: !input temp_sensor
+    id: "temperature_update"
+
+  - platform: state
+    entity_id: !input temp_sensor
+    to: "unavailable"
+    id: "sensor_unavailable"
+
+  - platform: state
+    entity_id: !input temp_sensor
+    from: "unavailable"
+    id: "sensor_available"
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "temperature_update"
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input trv_temp_input
+            data:
+              value: "{{ states(!input temp_sensor) | float }}"
+          - delay: 
+              seconds: !input update_delay
+
+      - conditions:
+          - condition: trigger
+            id: "sensor_unavailable"
+        sequence:
+          - service: select.select_option
+            target:
+              entity_id: !input trv_temp_select
+            data:
+              option: "internal"
+
+      - conditions:
+          - condition: trigger
+            id: "sensor_available"
+        sequence:
+          - service: select.select_option
+            target:
+              entity_id: !input trv_temp_select
+            data:
+              option: "external"
