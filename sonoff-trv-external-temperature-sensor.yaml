@@ -46,7 +46,7 @@ action:
             target:
               entity_id: !input trv_external_temp_input
             data:
-              value: "{{ states('input.external_temperature_sensor') | float }}"
+              value: "{{ states('external_temperature_sensor') | float }}"
 
       - conditions:
           - condition: trigger
