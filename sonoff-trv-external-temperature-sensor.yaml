@@ -64,7 +64,7 @@ action:
             target:
               entity_id: !input trv_temp_input
             data:
-              value: "{{ states(!input temp_sensor) | float }}"
+              value: "{{ states(input.temp_sensor) | float }}"
           - delay: 
               seconds: !input update_delay
 
