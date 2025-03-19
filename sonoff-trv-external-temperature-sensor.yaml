@@ -1,6 +1,6 @@
 blueprint:
-  name: Sync External Temperature to TRV
-  description: "Syncs an external temperature sensor to a TRV and switches to internal if the sensor becomes unavailable."
+  name: TRV External Sensor Sync
+  description: "Syncs an external temperature sensor to a TRV. Switches to internal if the sensor becomes unavailable. Made for and tested with a SONOFF Zigbee TRV."
   domain: automation
   input:
     external_temperature_sensor:
@@ -21,23 +21,37 @@ blueprint:
       selector:
         entity:
           domain: select
+    update_min_delay:
+      name: Update Min Delay
+      description: "The minimum delay between updates in seconds."
+      default: 120
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 1
+          mode: slider
 
 automation:
-  alias: "Sync External Temperature to TRV"
+  alias: "TRV External Sensor Sync"
   mode: restart
   trigger:
     - platform: state
       entity_id: !input external_temperature_sensor
       id: "temperature_update"
+
     - platform: state
       entity_id: !input external_temperature_sensor
       to: "unavailable"
       id: "sensor_unavailable"
+
     - platform: state
       entity_id: !input external_temperature_sensor
       from: "unavailable"
       id: "sensor_available"
+
   condition: []
+
   action:
     - choose:
         - conditions:
@@ -48,8 +62,8 @@ automation:
               target:
                 entity_id: !input trv_external_temp_input
               data:
-                value: "{{ states(input.external_temperature_sensor) | float }}"
-            - delay: "00:02:00"
+                value: "{{ states('!input external_temperature_sensor') | float }}"
+            - delay: "{{ !input update_min_delay }}"
 
         - conditions:
             - condition: trigger
