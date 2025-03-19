@@ -21,16 +21,6 @@ blueprint:
       selector:
         entity:
           domain: select
-    update_min_delay:
-      name: Update Min Delay
-      description: "The minimum delay between updates in seconds."
-      default: 120
-      selector:
-        number:
-          min: 0
-          max: 3600
-          step: 1
-          mode: slider
 mode: restart
 trigger:
   - platform: state
@@ -57,8 +47,7 @@ action:
               entity_id: !input trv_external_temp_input
             data:
               value: "{{ states('!input external_temperature_sensor') | float }}"
-          - delay: "{{ ( !input update_min_delay | int // 3600 ) | string }}:{{ ( ( !input update_min_delay | int % 3600 ) // 60 ) | string }}:{{ ( !input update_min_delay | int % 60 ) | string }}"
-          
+
       - conditions:
           - condition: trigger
             id: "sensor_unavailable"
