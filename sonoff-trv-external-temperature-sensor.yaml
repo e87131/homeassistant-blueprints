@@ -1,66 +1,37 @@
 blueprint:
-  name: TRV External Sensor Sync
-  description: "Syncs an external temperature sensor to a TRV. Switches to internal if the sensor becomes unavailable. Made for and tested with a SONOFF Zigbee TRV."
   domain: automation
+  name: Sonoff TRVZB External Temperature Sensor
+  description: This blueprint synchronises the local temperature of one or more Sonoff TRVZBs with an external temperature sensor.
+
   input:
     external_temperature_sensor:
       name: External Temperature Sensor
-      description: "The external temperature sensor entity."
+      description: The entity of the external temperature sensor device that represents the temperature value.
       selector:
         entity:
-          domain: sensor
-    trv_external_temp_input:
-      name: TRV External Temperature Input
-      description: "The TRV entity that accepts external temperature input."
+          filter:
+            - domain: sensor
+              device_class: temperature
+
+    trv_external_temperature_input:
+      name: Sonoff TRVZB(s)
+      description: The entity of the Sonoff TRVZB device that represents the external temperature value.
       selector:
         entity:
-          domain: number
-    trv_temperature_sensor_select:
-      name: TRV Temperature Sensor Select
-      description: "The TRV entity to switch between internal and external sensors."
-      selector:
-        entity:
-          domain: select
-mode: restart
-trigger:
-  - platform: state
+          multiple: true
+          filter:
+            - domain: number
+              device_class: temperature
+
+triggers:
+  - trigger: state
     entity_id: !input external_temperature_sensor
-    id: "temperature_update"
-
-  - platform: state
-    entity_id: !input external_temperature_sensor
-    to: "unavailable"
-    id: "sensor_unavailable"
-
-  - platform: state
-    entity_id: !input external_temperature_sensor
-    from: "unavailable"
-    id: "sensor_available"
-action:
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: "temperature_update"
-        sequence:
-          - service: number.set_value
-            data:
-              entity_id: !input trv_external_temp_input
-              value: "{{ states('external_temperature_sensor') | float }}"
-
-      - conditions:
-          - condition: trigger
-            id: "sensor_unavailable"
-        sequence:
-          - service: select.select_option
-            data:
-              entity_id: !input trv_temperature_sensor_select
-              option: "internal"
-
-      - conditions:
-          - condition: trigger
-            id: "sensor_available"
-        sequence:
-          - service: select.select_option
-            data:
-              entity_id: !input trv_temperature_sensor_select
-              option: "external"
+variables:
+  external_temperature_sensor: !input external_temperature_sensor
+actions:
+  - action: number.set_value
+    metadata: {}
+    data:
+      value: "{{ states(external_temperature_sensor) | float }}"
+      entity_id: !input trv_external_temperature_input
+mode: single
