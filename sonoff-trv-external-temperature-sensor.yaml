@@ -1,7 +1,6 @@
 blueprint:
   name: TRV External Sensor Sync
   description: "Syncs an external temperature sensor to a TRV. Switches to internal if the sensor becomes unavailable. Made for and tested with a SONOFF Zigbee TRV."
-  domain: automation
   input:
     external_temperature_sensor:
       name: External Temperature Sensor
